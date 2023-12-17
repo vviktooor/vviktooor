@@ -77,6 +77,6 @@
 
 ###
 
-<img src="https://github.com/vviktooor/vviktooor/tree/main/.github/workflows/snake.yml" alt="Snake animation" />
+<img src="https://github.com/vviktooor/vviktooor/blob/main/.github/workflows/snake.yml" alt="Snake animation" />
 
 ###
