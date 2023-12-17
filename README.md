@@ -77,6 +77,6 @@
 
 ###
 
-<img src="https://raw.githubusercontent.com/vviktooor/vviktooor/output/snake.svg" alt="Snake animation" />
+<img src="https://github.com/vviktooor/vviktooor/tree/main/.github/workflows/snake.yml" alt="Snake animation" />
 
 ###
