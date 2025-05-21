@@ -69,12 +69,6 @@
 
 ###
 
-<div align="center">
-  <a href="https://open.spotify.com/user/viczer127">
-    <img src="https://spotify-recently-played-readme.vercel.app/api?user=viczer127&count=5&unique=true" alt="Spotify recently played"  />
-  </a>
-</div>
-
 ###
 
 <img src="https://github.com/vviktooor/vviktooor/blob/output/snake.svg" alt="Snake animation" />
