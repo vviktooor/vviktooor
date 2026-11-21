@@ -37,9 +37,6 @@ jobs:
       - name: Test generator
         run: python -m unittest discover -s tests -v
 
-      - name: Generate stats cards
-        run: python scripts/profile_stats.py --out dist
-
       # Kolory: tokeny WR v4.0; poziomy kropek to signal przy 30/55/80/100%.
       - name: Generate snake
         uses: Platane/snk/svg-only@v3
@@ -47,12 +44,15 @@ jobs:
           github_user_name: ${{ github.repository_owner }}
           github_token: ${{ env.GH_TOKEN }}
           outputs: |
-            dist/snake.svg?color_snake=#121B2B&color_dots=#D9DEE6,#B5E9E4,#80DED2,#4BD2BF,#20C9B0
-            dist/snake-dark.svg?color_snake=#F5F7FB&color_dots=#283346,#164F53,#1A7B74,#1DA695,#20C9B0
+            dist/snake-raw-light.svg?color_snake=#121B2B&color_dots=#D9DEE6,#B5E9E4,#80DED2,#4BD2BF,#20C9B0
+            dist/snake-raw-dark.svg?color_snake=#F5F7FB&color_dots=#283346,#164F53,#1A7B74,#1DA695,#20C9B0
+
+      - name: Generate stats cards and wrap snake
+        run: python scripts/profile_stats.py --out dist
 
       - name: Check outputs
         run: |
-          for f in activity-light activity-dark languages-light languages-dark snake snake-dark; do
+          for f in activity-light activity-dark languages-light languages-dark snake-light snake-dark; do
             test -s "dist/$f.svg" || { echo "Missing dist/$f.svg"; exit 1; }
           done
           ls -la dist

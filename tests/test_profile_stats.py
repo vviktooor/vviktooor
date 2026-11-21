@@ -113,5 +113,42 @@ class Fetch(unittest.TestCase):
         self.assertEqual(data["since"], 2026)
 
 
+class Snake(unittest.TestCase):
+    RAW = ('<svg viewBox="-16 -32 880 192" width="880" height="192" xmlns="http://www.w3.org/2000/svg">'
+           '<style>.c{fill:red}</style><rect class="c" width="12" height="12"/></svg>')
+
+    def test_snake_wrapped_in_wr_card(self):
+        svg = ps.snake_svg(self.RAW, ps.THEMES["dark"])
+        xml.dom.minidom.parseString(svg)
+        self.assertIn("CONTRIBUTION GRAPH", svg)
+        self.assertIn('viewBox="-16 -32 880 192"', svg)
+        self.assertEqual(svg.count("<svg"), 2)
+
+    def test_main_wraps_raw_snake_and_removes_it(self):
+        fixture = os.path.join(os.path.dirname(__file__), "fixture.json")
+        with tempfile.TemporaryDirectory() as out:
+            for mode in ("light", "dark"):
+                with open(os.path.join(out, f"snake-raw-{mode}.svg"), "w") as fh:
+                    fh.write(self.RAW)
+            ps.main(["--fixture", fixture, "--out", out, "--today", "2026-11-21"])
+            names = set(os.listdir(out))
+            self.assertIn("snake-dark.svg", names)
+            self.assertNotIn("snake-raw-dark.svg", names)
+
+    def test_bad_snake_raises(self):
+        with self.assertRaises(ValueError):
+            ps.snake_svg("<svg></svg>", ps.THEMES["dark"])
+
+
+class CountUp(unittest.TestCase):
+    def test_final_value_visible_without_animation(self):
+        svg = ps.count_up(0, 0, 356, "", 'fill="#fff"')
+        self.assertIn(">356<animate", svg)
+        self.assertNotIn('opacity="0">356', svg)
+
+    def test_zero_is_static(self):
+        self.assertEqual(ps.count_up(0, 10, 0, " d", "a=\"b\""), '<text x="0" y="10" a="b">0 d</text>')
+
+
 if __name__ == "__main__":
     unittest.main()
