@@ -1,0 +1,73 @@
+name: Profile stats and snake
+
+# Generuje karty statystyk (WR v4.0) i węża, publikuje je na branchu `output`.
+# Publikacja następuje tylko, gdy wszystko się uda, więc w razie awarii
+# README dalej pokazuje poprzednią, działającą wersję.
+#
+# Token: sekret STATS_TOKEN (opcjonalny, fine-grained PAT, All repositories, Metadata: read-only)
+# dolicza języki z prywatnych repo. Bez niego używany jest GITHUB_TOKEN.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: profile-stats-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.STATS_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Test generator
+        run: python -m unittest discover -s tests -v
+
+      - name: Generate stats cards
+        run: python scripts/profile_stats.py --out dist
+
+      # Kolory: tokeny WR v4.0; poziomy kropek to signal przy 30/55/80/100%.
+      - name: Generate snake
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          github_token: ${{ env.GH_TOKEN }}
+          outputs: |
+            dist/snake.svg?color_snake=#121B2B&color_dots=#D9DEE6,#B5E9E4,#80DED2,#4BD2BF,#20C9B0
+            dist/snake-dark.svg?color_snake=#F5F7FB&color_dots=#283346,#164F53,#1A7B74,#1DA695,#20C9B0
+
+      - name: Check outputs
+        run: |
+          for f in activity-light activity-dark languages-light languages-dark snake snake-dark; do
+            test -s "dist/$f.svg" || { echo "Missing dist/$f.svg"; exit 1; }
+          done
+          ls -la dist
+
+      - name: Upload preview
+        uses: actions/upload-artifact@v5
+        with:
+          name: profile-cards
+          path: dist
+
+      - name: Publish to output branch
+        if: github.event_name != 'pull_request'
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
