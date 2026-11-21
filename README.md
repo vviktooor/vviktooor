@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/wr-banner-dark.svg">
-    <img src="assets/wr-banner-light.svg" width="100%" alt="Hi, I'm Wiktor. Fullstack developer from Poland. WR monogram.">
+    <img src="assets/wr-banner-light.svg" width="100%" alt="Wiktor · WR – Digital · Software · Engineering">
   </picture>
 
   <br><br>
@@ -9,23 +9,16 @@
   <img src="https://visitor-badge.laobi.icu/badge?page_id=vviktooor.vviktooor&left_color=%23121B2B&right_color=%233267E9&left_text=profile%20views" alt="Profile views">
 </div>
 
-## About me
+<h3 align="center">Stack</h3>
 
-I'm a beginner fullstack developer from Poland.
-
-- **Learning:** Python basics
-- **Hobbies:** fishing, new technology, exotic animals, traveling
-
-## Languages and tools
-
-<p>
+<p align="center">
   <img src="https://img.shields.io/badge/Python-121B2B?style=flat-square&logo=python&logoColor=20C9B0" alt="Python">
   <img src="https://img.shields.io/badge/JavaScript-121B2B?style=flat-square&logo=javascript&logoColor=20C9B0" alt="JavaScript">
   <img src="https://img.shields.io/badge/HTML5-121B2B?style=flat-square&logo=html5&logoColor=20C9B0" alt="HTML5">
   <img src="https://img.shields.io/badge/CSS3-121B2B?style=flat-square&logo=css3&logoColor=20C9B0" alt="CSS3">
 </p>
 
-## Stats
+<h3 align="center">Activity</h3>
 
 <div align="center">
   <picture>
