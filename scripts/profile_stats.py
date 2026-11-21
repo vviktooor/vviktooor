@@ -2,7 +2,7 @@
 """Generuje karty statystyk profilu GitHub w kolorach WR v4.0.
 
 Pobiera dane z GitHub GraphQL API (token w GH_TOKEN) albo z pliku --fixture
-i zapisuje cztery pliki SVG: activity-{light,dark}.svg, languages-{light,dark}.svg.
+i zapisuje karty SVG: activity-, languages- i (jeśli jest surowy wąż) snake-{light,dark}.svg.
 
 Autor: WR
 """
@@ -12,6 +12,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import urllib.request
 from xml.sax.saxutils import escape
@@ -142,6 +143,48 @@ def language_shares(languages: dict[str, float], exclude: set[str]) -> list[tupl
 
 
 # ---------------------------------------------------------------- SVG
+# Animacje: tylko CSS/SMIL wewnątrz SVG (GitHub nie uruchamia JS w README).
+# Stan końcowy jest stanem bazowym, więc bez animacji karta wygląda poprawnie.
+
+EASE = "cubic-bezier(.22,1,.36,1)"
+CSS = f"""<style>
+.wr-in{{animation:wr-in .7s {EASE} both}}
+.wr-grow-y{{transform-box:fill-box;transform-origin:50% 100%;animation:wr-grow-y .9s {EASE} both}}
+.wr-grow-x{{transform-box:fill-box;transform-origin:0 50%;animation:wr-grow-x 1s {EASE} both}}
+.wr-pulse{{animation:wr-pulse 2.4s ease-in-out infinite}}
+@keyframes wr-in{{from{{opacity:0;transform:translateY(12px)}}to{{opacity:1;transform:none}}}}
+@keyframes wr-grow-y{{from{{transform:scaleY(0)}}to{{transform:scaleY(1)}}}}
+@keyframes wr-grow-x{{from{{transform:scaleX(0)}}to{{transform:scaleX(1)}}}}
+@keyframes wr-pulse{{0%,100%{{opacity:1}}50%{{opacity:.35}}}}
+@media (prefers-reduced-motion:reduce){{.wr-in,.wr-grow-y,.wr-grow-x,.wr-pulse{{animation:none}}}}
+</style>"""
+
+
+def delay(seconds: float) -> str:
+    return f' style="animation-delay:{seconds:.2f}s"'
+
+
+def count_up(x: float, y: float, value: int, suffix: str, attrs: str, start: float = .3,
+             steps: int = 14, duration: float = 1.1) -> str:
+    """Licznik „od zera” z klatek tekstu przełączanych przez SMIL; bez SMIL widać wartość końcową."""
+    if value <= 0:
+        return f'<text x="{x:.0f}" y="{y}" {attrs}>{value}{suffix}</text>'
+    frames = sorted({round(value * (1 - (1 - i / steps) ** 3)) for i in range(steps)} - {value})
+    slot = duration / (len(frames) + 1)
+    out = []
+    for i, v in enumerate(frames):
+        out.append(f'<text x="{x:.0f}" y="{y}" {attrs} opacity="0">{fmt_int(v)}{suffix}'
+                   f'<set attributeName="opacity" to="1" begin="{start + i * slot:.3f}s" dur="{slot:.3f}s"/></text>')
+    end = start + len(frames) * slot
+    out.append(f'<text x="{x:.0f}" y="{y}" {attrs}>{fmt_int(value)}{suffix}'
+               f'<animate attributeName="opacity" values="0;0;1" keyTimes="0;{end / (end + .01):.4f};1" '
+               f'dur="{end + .01:.3f}s" fill="freeze"/></text>')
+    return "".join(out)
+
+
+def fmt_int(value: int) -> str:
+    return f"{value:,}".replace(",", " ")
+
 
 def fmt_range(rng: tuple) -> str:
     start, end = rng
@@ -153,46 +196,50 @@ def fmt_range(rng: tuple) -> str:
 
 def card(width: int, height: int, theme: dict, label: str, body: str, aria: str) -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-            f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(aria)}">'
+            f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(aria)}">{CSS}'
             f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="16" '
             f'fill="{theme["bg"]}" stroke="{theme["border"]}"/>'
-            f'<rect x="40" y="38" width="4" height="20" rx="2" fill="{SIGNAL}"/>'
-            f'<text x="56" y="54" font-family="{MONO}" font-size="16" letter-spacing="2" '
+            f'<rect class="wr-pulse" x="40" y="38" width="4" height="20" rx="2" fill="{SIGNAL}"/>'
+            f'<text class="wr-in" x="56" y="54" font-family="{MONO}" font-size="16" letter-spacing="2" '
             f'fill="{theme["muted"]}">{escape(label)}</text>{body}</svg>\n')
 
 
 def activity_svg(stats: dict, weeks: list, since: int, theme: dict) -> str:
     w, h = 1200, 430
-    kpis = [("Total contributions", f'{stats["total"]:,}'.replace(",", " "), f"Since {since}"),
-            ("Current streak", f'{stats["current"]} d', fmt_range(stats["current_range"])),
-            ("Longest streak", f'{stats["longest"]} d', fmt_range(stats["longest_range"]))]
+    kpis = [("Total contributions", stats["total"], "", f"Since {since}"),
+            ("Current streak", stats["current"], " d", fmt_range(stats["current_range"])),
+            ("Longest streak", stats["longest"], " d", fmt_range(stats["longest_range"]))]
     parts = []
     col = (w - 80) / 3
-    for i, (title, value, sub) in enumerate(kpis):
+    big = f'font-family="{FONT}" font-size="48" font-weight="700" fill="{theme["text"]}"'
+    for i, (title, value, suffix, sub) in enumerate(kpis):
         x = 40 + i * col
         if i:
-            parts.append(f'<rect x="{x - 1:.0f}" y="96" width="1" height="104" fill="{theme["grid"]}"/>')
+            parts.append(f'<rect class="wr-grow-y" x="{x - 1:.0f}" y="96" width="1" height="104" '
+                         f'fill="{theme["grid"]}"{delay(.2 + i * .1)}/>')
         tx = x + (24 if i else 0)
         parts.append(
+            f'<g class="wr-in"{delay(.1 + i * .12)}>'
             f'<text x="{tx:.0f}" y="118" font-family="{FONT}" font-size="16" fill="{theme["muted"]}">{title}</text>'
-            f'<text x="{tx:.0f}" y="172" font-family="{FONT}" font-size="48" font-weight="700" '
-            f'fill="{theme["text"]}">{escape(value)}</text>'
-            f'<text x="{tx:.0f}" y="198" font-family="{MONO}" font-size="14" fill="{theme["accent"]}">{escape(sub)}</text>')
+            f'{count_up(tx, 172, value, suffix, big, start=.3 + i * .12)}'
+            f'<text x="{tx:.0f}" y="198" font-family="{MONO}" font-size="14" fill="{theme["accent"]}">'
+            f'{escape(sub)}</text></g>')
 
-    # Słupki tygodniowe: jedna seria, jeden odcień (signal), zaokrąglony wierzch.
+    # Słupki tygodniowe: jedna seria, jeden odcień (signal), zaokrąglony wierzch, rosną po kolei.
     top, base, left, right = 266, 372, 40, w - 40
     peak = max((c for _, c in weeks), default=0)
     step = (right - left) / len(weeks)
     bar = max(step - 4, 2)
-    parts.append(f'<text x="{left}" y="244" font-family="{FONT}" font-size="16" fill="{theme["muted"]}">'
-                 f'Contributions per week · last 12 months · peak {peak}</text>')
-    parts.append(f'<rect x="{left}" y="{base}" width="{right - left}" height="1" fill="{theme["grid"]}"/>')
+    parts.append(f'<text class="wr-in" x="{left}" y="244" font-family="{FONT}" font-size="16" '
+                 f'fill="{theme["muted"]}"{delay(.5)}>Contributions per week · last 12 months · peak {peak}</text>')
+    parts.append(f'<rect class="wr-grow-x" x="{left}" y="{base}" width="{right - left}" height="1" '
+                 f'fill="{theme["grid"]}"{delay(.4)}/>')
     for i, (start, count) in enumerate(weeks):
         x = left + i * step + (step - bar) / 2
         if count:
             bh = max((base - top) * count / peak, 4)
-            parts.append(f'<path d="M{x:.1f} {base} V{base - bh + 4:.1f} q0 -4 4 -4 H{x + bar - 4:.1f} '
-                         f'q4 0 4 4 V{base} Z" fill="{SIGNAL}"/>')
+            parts.append(f'<path class="wr-grow-y" d="M{x:.1f} {base} V{base - bh + 4:.1f} q0 -4 4 -4 '
+                         f'H{x + bar - 4:.1f} q4 0 4 4 V{base} Z" fill="{SIGNAL}"{delay(.6 + i * .02)}/>')
         if i and start.month != weeks[i - 1][0].month:
             parts.append(f'<text x="{x:.1f}" y="{base + 24}" font-family="{MONO}" font-size="13" '
                          f'fill="{theme["muted"]}">{start.strftime("%b")}</text>')
@@ -209,26 +256,43 @@ def languages_svg(shares: list, theme: dict) -> str:
         parts.append(f'<text x="{left}" y="130" font-family="{FONT}" font-size="18" '
                      f'fill="{theme["muted"]}">No language data yet</text>')
     else:
-        # Jeden pasek „część całości”, 2 px przerwy między segmentami.
+        # Jeden pasek „część całości”, 2 px przerwy między segmentami, segmenty wjeżdżają po kolei.
         avail = right - left - 2 * (len(shares) - 1)
         x = left
-        for i, (name, share) in enumerate(shares):
-            color = theme["other"] if name == "Other" else theme["series"][i]
-            seg = max(avail * share, 3)
-            parts.append(f'<rect x="{x:.1f}" y="{y}" width="{seg:.1f}" height="20" rx="4" fill="{color}"/>')
-            x += seg + 2
         col = (right - left) / len(shares)
         for i, (name, share) in enumerate(shares):
             color = theme["other"] if name == "Other" else theme["series"][i]
+            seg = max(avail * share, 3)
+            parts.append(f'<rect class="wr-grow-x" x="{x:.1f}" y="{y}" width="{seg:.1f}" height="20" rx="4" '
+                         f'fill="{color}"{delay(.2 + i * .15)}/>')
+            x += seg + 2
             lx = left + i * col
             parts.append(
-                f'<circle cx="{lx + 7:.0f}" cy="{154}" r="7" fill="{color}" stroke="{theme["border"]}"/>'
+                f'<g class="wr-in"{delay(.4 + i * .1)}>'
+                f'<circle cx="{lx + 7:.0f}" cy="154" r="7" fill="{color}" stroke="{theme["border"]}"/>'
                 f'<text x="{lx + 24:.0f}" y="160" font-family="{FONT}" font-size="18" font-weight="600" '
                 f'fill="{theme["text"]}">{escape(name)}</text>'
                 f'<text x="{lx + 24:.0f}" y="188" font-family="{MONO}" font-size="16" '
-                f'fill="{theme["muted"]}">{share * 100:.1f}%</text>')
+                f'fill="{theme["muted"]}">{share * 100:.1f}%</text></g>')
     aria = "Languages: " + ", ".join(f"{n} {s * 100:.1f}%" for n, s in shares)
     return card(w, h, theme, "MOST USED LANGUAGES", "".join(parts), aria or "Languages")
+
+
+def snake_svg(raw: str, theme: dict) -> str:
+    """Wkłada SVG węża (Platane/snk) do karty WR, żeby cały profil miał jeden styl."""
+    raw = raw.strip()
+    if raw.startswith("<?xml"):
+        raw = raw[raw.index("?>") + 2:].lstrip()
+    m = re.match(r'<svg[^>]*viewBox="([-\d. ]+)"[^>]*>', raw)
+    if not m:
+        raise ValueError("Nieoczekiwany format SVG węża")
+    vx, vy, vw, vh = (float(v) for v in m.group(1).split())
+    w, inner_w = 1200, 1120
+    inner_h = round(inner_w * vh / vw)
+    h = 84 + inner_h + 24
+    inner = (f'<svg x="40" y="84" width="{inner_w}" height="{inner_h}" viewBox="{m.group(1)}">'
+             + raw[m.end():])
+    return card(w, h, theme, "CONTRIBUTION GRAPH", inner, "Snake eating the contribution graph")
 
 
 # ---------------------------------------------------------------- CLI
@@ -259,11 +323,19 @@ def main(argv: list[str] | None = None) -> int:
     shares = language_shares(data["languages"], {x.strip() for x in args.exclude.split(",") if x.strip()})
 
     os.makedirs(args.out, exist_ok=True)
+
+    def write(name: str, content: str) -> None:
+        with open(os.path.join(args.out, name), "w", encoding="utf-8") as fh:
+            fh.write(content)
+
     for mode, theme in THEMES.items():
-        with open(os.path.join(args.out, f"activity-{mode}.svg"), "w", encoding="utf-8") as fh:
-            fh.write(activity_svg(stats, weeks, data["since"], theme))
-        with open(os.path.join(args.out, f"languages-{mode}.svg"), "w", encoding="utf-8") as fh:
-            fh.write(languages_svg(shares, theme))
+        write(f"activity-{mode}.svg", activity_svg(stats, weeks, data["since"], theme))
+        write(f"languages-{mode}.svg", languages_svg(shares, theme))
+        raw = os.path.join(args.out, f"snake-raw-{mode}.svg")
+        if os.path.exists(raw):
+            with open(raw, encoding="utf-8") as fh:
+                write(f"snake-{mode}.svg", snake_svg(fh.read(), theme))
+            os.remove(raw)
     print(json.dumps({"total": stats["total"], "current": stats["current"],
                       "longest": stats["longest"], "languages": shares}, default=str))
     return 0
