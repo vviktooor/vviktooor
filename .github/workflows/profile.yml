@@ -4,7 +4,7 @@ name: Profile stats and snake
 # Publikacja następuje tylko, gdy wszystko się uda, więc w razie awarii
 # README dalej pokazuje poprzednią, działającą wersję.
 #
-# Token: sekret STATS_TOKEN (opcjonalny, classic PAT z `read:user` + `repo`)
+# Token: sekret STATS_TOKEN (opcjonalny, fine-grained PAT, All repositories, Metadata: read-only)
 # dolicza języki z prywatnych repo. Bez niego używany jest GITHUB_TOKEN.
 
 on:
@@ -28,9 +28,9 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.STATS_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -58,7 +58,7 @@ jobs:
           ls -la dist
 
       - name: Upload preview
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: profile-cards
           path: dist

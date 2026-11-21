@@ -49,7 +49,7 @@ def graphql(token: str, query: str, variables: dict) -> dict:
 
 
 def fetch(token: str, login: str, today: dt.date) -> dict:
-    """Zwraca {'days': [(iso, count)], 'languages': {name: bytes}, 'since': rok}."""
+    """Zwraca {'days': [(iso, count)], 'languages': {name: udział sumowany po repo}, 'since': rok}."""
     user = graphql(token, "query($l:String!){user(login:$l){createdAt}}", {"l": login})["user"]
     start_year = int(user["createdAt"][:4])
 
@@ -65,7 +65,7 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
             for d in week["contributionDays"]:
                 days[d["date"]] = d["contributionCount"]
 
-    languages: dict[str, int] = {}
+    languages: dict[str, float] = {}
     cursor = None
     while True:
         data = graphql(token, """query($l:String!,$c:String){user(login:$l){
@@ -75,9 +75,12 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
             edges{size node{name}}}}}}}""", {"l": login, "c": cursor})
         repos = data["user"]["repositories"]
         for repo in repos["nodes"]:
-            for edge in repo["languages"]["edges"]:
+            # Każde repo waży tyle samo: jeden duży projekt nie zagłusza reszty.
+            edges = repo["languages"]["edges"]
+            repo_total = sum(e["size"] for e in edges)
+            for edge in edges:
                 name = edge["node"]["name"]
-                languages[name] = languages.get(name, 0) + edge["size"]
+                languages[name] = languages.get(name, 0) + edge["size"] / repo_total
         if not repos["pageInfo"]["hasNextPage"]:
             break
         cursor = repos["pageInfo"]["endCursor"]
@@ -125,7 +128,7 @@ def weekly(days: list[tuple[str, int]], today: dt.date, weeks: int = 52) -> list
     return [(start, total) for start, total in buckets]
 
 
-def language_shares(languages: dict[str, int], exclude: set[str]) -> list[tuple[str, float]]:
+def language_shares(languages: dict[str, float], exclude: set[str]) -> list[tuple[str, float]]:
     items = sorted(((n, b) for n, b in languages.items() if n not in exclude and b > 0),
                    key=lambda x: -x[1])
     total = sum(b for _, b in items)

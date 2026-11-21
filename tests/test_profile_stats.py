@@ -88,5 +88,30 @@ class Render(unittest.TestCase):
                 self.assertLessEqual(used, allowed, name)
 
 
+class Fetch(unittest.TestCase):
+    def test_each_repo_weighs_the_same(self):
+        def fake(token, query, variables):
+            if "createdAt" in query:
+                return {"user": {"createdAt": "2026-01-01T00:00:00Z"}}
+            if "contributionCalendar" in query:
+                return {"user": {"contributionsCollection": {"contributionCalendar": {"weeks": [
+                    {"contributionDays": [{"date": "2026-11-21", "contributionCount": 2}]}]}}}}
+            return {"user": {"repositories": {"pageInfo": {"hasNextPage": False, "endCursor": None},
+                    "nodes": [
+                        {"languages": {"edges": [{"size": 1_000_000, "node": {"name": "HTML"}}]}},
+                        {"languages": {"edges": [{"size": 300, "node": {"name": "Python"}},
+                                                 {"size": 100, "node": {"name": "Shell"}}]}},
+                        {"languages": {"edges": []}}]}}}
+        original = ps.graphql
+        ps.graphql = fake
+        try:
+            data = ps.fetch("t", "u", D(2026, 11, 21))
+        finally:
+            ps.graphql = original
+        self.assertEqual(data["languages"], {"HTML": 1.0, "Python": 0.75, "Shell": 0.25})
+        self.assertEqual(data["days"], [("2026-11-21", 2)])
+        self.assertEqual(data["since"], 2026)
+
+
 if __name__ == "__main__":
     unittest.main()
