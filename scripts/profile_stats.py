@@ -68,14 +68,20 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
 
     languages: dict[str, float] = {}
     counted = {"public": 0, "private": 0}
+    # Prywatne repo zwraca tylko `viewer` (właściciel tokenu), nie `user(login:)`.
+    try:
+        own = graphql(token, "query{viewer{login}}", {})["viewer"]["login"].lower() == login.lower()
+    except (RuntimeError, KeyError, TypeError):
+        own = False  # np. GITHUB_TOKEN w Actions
+    root, args = ("viewer", "") if own else ("user(login:$l)", "$l:String!,")
     cursor = None
     while True:
-        data = graphql(token, """query($l:String!,$c:String){user(login:$l){
-            repositories(first:100,after:$c,ownerAffiliations:OWNER,isFork:false){
-            pageInfo{hasNextPage endCursor}
-            nodes{isPrivate languages(first:20,orderBy:{field:SIZE,direction:DESC}){
-            edges{size node{name}}}}}}}""", {"l": login, "c": cursor})
-        repos = data["user"]["repositories"]
+        data = graphql(token, f"""query({args}$c:String){{{root}{{
+            repositories(first:100,after:$c,ownerAffiliations:OWNER,isFork:false){{
+            pageInfo{{hasNextPage endCursor}}
+            nodes{{isPrivate languages(first:20,orderBy:{{field:SIZE,direction:DESC}}){{
+            edges{{size node{{name}}}}}}}}}}}}}}""", {"c": cursor, **({} if own else {"l": login})})
+        repos = data["viewer" if own else "user"]["repositories"]
         for repo in repos["nodes"]:
             counted["private" if repo.get("isPrivate") else "public"] += 1
             # Każde repo waży tyle samo: jeden duży projekt nie zagłusza reszty.
@@ -89,7 +95,7 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
         cursor = repos["pageInfo"]["endCursor"]
 
     # Diagnostyka: bez STATS_TOKEN prywatnych repo będzie 0.
-    print(f"Token: {os.environ.get('TOKEN_SOURCE', '?')}", file=sys.stderr)
+    print(f"Token: {os.environ.get('TOKEN_SOURCE', '?')}, zapytanie: {'viewer' if own else 'user'}", file=sys.stderr)
     print(f"Repozytoria: {counted['public']} publicznych, {counted['private']} prywatnych", file=sys.stderr)
     return {"days": sorted(days.items()), "languages": languages, "since": start_year}
 

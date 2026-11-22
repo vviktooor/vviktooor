@@ -91,12 +91,14 @@ class Render(unittest.TestCase):
 class Fetch(unittest.TestCase):
     def test_each_repo_weighs_the_same(self):
         def fake(token, query, variables):
+            if "viewer{login}" in query:
+                return {"viewer": {"login": "u"}}
             if "createdAt" in query:
                 return {"user": {"createdAt": "2026-01-01T00:00:00Z"}}
             if "contributionCalendar" in query:
                 return {"user": {"contributionsCollection": {"contributionCalendar": {"weeks": [
                     {"contributionDays": [{"date": "2026-11-21", "contributionCount": 2}]}]}}}}
-            return {"user": {"repositories": {"pageInfo": {"hasNextPage": False, "endCursor": None},
+            return {"viewer": {"repositories": {"pageInfo": {"hasNextPage": False, "endCursor": None},
                     "nodes": [
                         {"languages": {"edges": [{"size": 1_000_000, "node": {"name": "HTML"}}]}},
                         {"languages": {"edges": [{"size": 300, "node": {"name": "Python"}},
@@ -111,6 +113,29 @@ class Fetch(unittest.TestCase):
         self.assertEqual(data["languages"], {"HTML": 1.0, "Python": 0.75, "Shell": 0.25})
         self.assertEqual(data["days"], [("2026-11-21", 2)])
         self.assertEqual(data["since"], 2026)
+
+
+    def test_falls_back_to_user_query_without_own_token(self):
+        seen = []
+
+        def fake(token, query, variables):
+            seen.append(query)
+            if "viewer{login}" in query:
+                raise RuntimeError("GraphQL: not accessible")
+            if "createdAt" in query:
+                return {"user": {"createdAt": "2026-01-01T00:00:00Z"}}
+            if "contributionCalendar" in query:
+                return {"user": {"contributionsCollection": {"contributionCalendar": {"weeks": []}}}}
+            return {"user": {"repositories": {"pageInfo": {"hasNextPage": False, "endCursor": None},
+                    "nodes": [{"isPrivate": False, "languages": {"edges": [{"size": 5, "node": {"name": "C"}}]}}]}}}
+        original = ps.graphql
+        ps.graphql = fake
+        try:
+            data = ps.fetch("t", "u", D(2026, 11, 21))
+        finally:
+            ps.graphql = original
+        self.assertEqual(data["languages"], {"C": 1.0})
+        self.assertTrue(any("user(login:$l)" in q for q in seen))
 
 
 class Snake(unittest.TestCase):
