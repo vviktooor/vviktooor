@@ -67,15 +67,17 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
                 days[d["date"]] = d["contributionCount"]
 
     languages: dict[str, float] = {}
+    counted = {"public": 0, "private": 0}
     cursor = None
     while True:
         data = graphql(token, """query($l:String!,$c:String){user(login:$l){
             repositories(first:100,after:$c,ownerAffiliations:OWNER,isFork:false){
             pageInfo{hasNextPage endCursor}
-            nodes{languages(first:20,orderBy:{field:SIZE,direction:DESC}){
+            nodes{isPrivate languages(first:20,orderBy:{field:SIZE,direction:DESC}){
             edges{size node{name}}}}}}}""", {"l": login, "c": cursor})
         repos = data["user"]["repositories"]
         for repo in repos["nodes"]:
+            counted["private" if repo.get("isPrivate") else "public"] += 1
             # Każde repo waży tyle samo: jeden duży projekt nie zagłusza reszty.
             edges = repo["languages"]["edges"]
             repo_total = sum(e["size"] for e in edges)
@@ -86,6 +88,8 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
             break
         cursor = repos["pageInfo"]["endCursor"]
 
+    # Diagnostyka: bez STATS_TOKEN prywatnych repo będzie 0.
+    print(f"Repozytoria: {counted['public']} publicznych, {counted['private']} prywatnych", file=sys.stderr)
     return {"days": sorted(days.items()), "languages": languages, "since": start_year}
 
 
