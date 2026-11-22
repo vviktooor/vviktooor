@@ -77,7 +77,7 @@ class Render(unittest.TestCase):
         self.assertIn("No language data yet", svg)
 
     def test_only_wr_colors(self):
-        allowed = {ps.INK, ps.SIGNAL, ps.BLUE, ps.SLATE, ps.PAPER, ps.LINE, ps.WHITE, "#283346"}
+        allowed = {ps.INK, ps.SIGNAL, ps.BLUE, ps.SLATE, ps.PAPER, ps.LINE, ps.WHITE, "#000000", "#283346"}  # #000000 = --wr-black
         import re
         fixture = os.path.join(os.path.dirname(__file__), "fixture.json")
         with tempfile.TemporaryDirectory() as out:
@@ -145,7 +145,7 @@ class Snake(unittest.TestCase):
     def test_snake_wrapped_in_wr_card(self):
         svg = ps.snake_svg(self.RAW, ps.THEMES["dark"])
         xml.dom.minidom.parseString(svg)
-        self.assertIn("CONTRIBUTION GRAPH", svg)
+        self.assertIn("./contributions --snake", svg)
         self.assertIn('viewBox="-16 -32 880 192"', svg)
         self.assertEqual(svg.count("<svg"), 2)
 

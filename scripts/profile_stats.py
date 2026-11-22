@@ -28,7 +28,7 @@ THEMES = {
               "accent": BLUE, "grid": LINE,
               "series": [SIGNAL, BLUE, INK, SLATE], "other": LINE},
     "dark": {"bg": INK, "border": SLATE, "text": WHITE, "muted": LINE,
-             "accent": SIGNAL, "grid": "#283346",
+             "accent": SIGNAL, "grid": "#283346", "scan": True,
              "series": [SIGNAL, BLUE, PAPER, SLATE], "other": "#283346"},
 }
 FONT = "Poppins, 'Segoe UI', Helvetica, Arial, sans-serif"
@@ -162,12 +162,12 @@ CSS = f"""<style>
 .wr-in{{animation:wr-in .7s {EASE} both}}
 .wr-grow-y{{transform-box:fill-box;transform-origin:50% 100%;animation:wr-grow-y .9s {EASE} both}}
 .wr-grow-x{{transform-box:fill-box;transform-origin:0 50%;animation:wr-grow-x 1s {EASE} both}}
-.wr-pulse{{animation:wr-pulse 2.4s ease-in-out infinite}}
+.wr-blink{{animation:wr-blink 1s steps(1) infinite}}
 @keyframes wr-in{{from{{opacity:0;transform:translateY(12px)}}to{{opacity:1;transform:none}}}}
 @keyframes wr-grow-y{{from{{transform:scaleY(0)}}to{{transform:scaleY(1)}}}}
 @keyframes wr-grow-x{{from{{transform:scaleX(0)}}to{{transform:scaleX(1)}}}}
-@keyframes wr-pulse{{0%,100%{{opacity:1}}50%{{opacity:.35}}}}
-@media (prefers-reduced-motion:reduce){{.wr-in,.wr-grow-y,.wr-grow-x,.wr-pulse{{animation:none}}}}
+@keyframes wr-blink{{50%{{fill-opacity:0}}}}
+@media (prefers-reduced-motion:reduce){{.wr-in,.wr-grow-y,.wr-grow-x,.wr-blink{{animation:none}}}}
 </style>"""
 
 
@@ -205,14 +205,33 @@ def fmt_range(rng: tuple) -> str:
     return b if start == end else f"{a} – {b}"
 
 
+PROMPT = "wr@root:~$ "
+CHAR_W = 10.5  # górne oszacowanie szerokości znaku MONO przy 16 px (fonty zastępcze)
+
+
 def card(width: int, height: int, theme: dict, label: str, body: str, aria: str) -> str:
+    """Karta WR w stylu terminala: pisany nagłówek z kursorem i linie CRT (w ciemnym motywie)."""
+    full = len(PROMPT) + len(label) + 2
+    text_w = round(full * CHAR_W)
+    steps = ";".join(str(round(text_w * i / full)) for i in range(full + 1))
+    scan = ""
+    if theme.get("scan"):
+        scan = (f'<pattern id="wr-scan" width="4" height="4" patternUnits="userSpaceOnUse">'
+                f'<rect width="4" height="2" fill="#000000" opacity=".22"/></pattern>'
+                f'<rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="15" fill="url(#wr-scan)" '
+                f'pointer-events="none"/>')
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
             f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(aria)}">{CSS}'
+            f'<defs><clipPath id="wr-label"><rect x="36" y="36" width="{text_w + 8}" height="26">'
+            f'<animate attributeName="width" values="{steps}" dur=".6s" calcMode="discrete" fill="freeze"/>'
+            f'</rect></clipPath></defs>'
             f'<rect x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="16" '
             f'fill="{theme["bg"]}" stroke="{theme["border"]}"/>'
-            f'<rect class="wr-pulse" x="40" y="38" width="4" height="20" rx="2" fill="{SIGNAL}"/>'
-            f'<text class="wr-in" x="56" y="54" font-family="{MONO}" font-size="16" letter-spacing="2" '
-            f'fill="{theme["muted"]}">{escape(label)}</text>{body}</svg>\n')
+            f'<text x="40" y="54" clip-path="url(#wr-label)" font-family="{MONO}" font-size="16">'
+            f'<tspan fill="{theme["accent"]}">{PROMPT}</tspan>'
+            f'<tspan fill="{theme["muted"]}">{escape(label)}</tspan>'
+            f'<tspan class="wr-blink" fill="{theme["accent"]}"> █</tspan></text>'
+            f'{body}{scan}</svg>\n')
 
 
 def activity_svg(stats: dict, weeks: list, since: int, theme: dict) -> str:
@@ -256,7 +275,7 @@ def activity_svg(stats: dict, weeks: list, since: int, theme: dict) -> str:
                          f'fill="{theme["muted"]}">{start.strftime("%b")}</text>')
     aria = (f'Activity: {stats["total"]} total contributions since {since}, current streak '
             f'{stats["current"]} days, longest streak {stats["longest"]} days.')
-    return card(w, h, theme, "ACTIVITY", "".join(parts), aria)
+    return card(w, h, theme, "./activity --all-time", "".join(parts), aria)
 
 
 def languages_svg(shares: list, theme: dict) -> str:
@@ -286,7 +305,7 @@ def languages_svg(shares: list, theme: dict) -> str:
                 f'<text x="{lx + 24:.0f}" y="188" font-family="{MONO}" font-size="16" '
                 f'fill="{theme["muted"]}">{share * 100:.1f}%</text></g>')
     aria = "Languages: " + ", ".join(f"{n} {s * 100:.1f}%" for n, s in shares)
-    return card(w, h, theme, "MOST USED LANGUAGES", "".join(parts), aria or "Languages")
+    return card(w, h, theme, "./languages --top", "".join(parts), aria or "Languages")
 
 
 def snake_svg(raw: str, theme: dict) -> str:
@@ -303,7 +322,7 @@ def snake_svg(raw: str, theme: dict) -> str:
     h = 84 + inner_h + 24
     inner = (f'<svg x="40" y="84" width="{inner_w}" height="{inner_h}" viewBox="{m.group(1)}">'
              + raw[m.end():])
-    return card(w, h, theme, "CONTRIBUTION GRAPH", inner, "Snake eating the contribution graph")
+    return card(w, h, theme, "./contributions --snake", inner, "Snake eating the contribution graph")
 
 
 # ---------------------------------------------------------------- CLI

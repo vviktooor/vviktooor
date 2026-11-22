@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="WR · vviktooor">
+<style>
+.flicker{animation:flicker 7s steps(1) infinite}
+.glitch-a{animation:glitch-a 4.5s steps(1) infinite}
+.glitch-b{animation:glitch-b 4.5s steps(1) infinite}
+.slice{animation:slice 4.5s steps(1) infinite}
+.blink{animation:blink 1s steps(1) infinite}
+.beam{animation:beam 6s linear infinite}
+@keyframes flicker{0%,100%{opacity:1}31%{opacity:.86}32%{opacity:1}77%{opacity:.92}78%{opacity:1}}
+@keyframes glitch-a{0%,100%{opacity:0;transform:none}88%{opacity:.9;transform:translate(-9px,0)}90%{opacity:.9;transform:translate(7px,-3px)}92%{opacity:.9;transform:translate(-4px,2px)}94%{opacity:0;transform:none}}
+@keyframes glitch-b{0%,100%{opacity:0;transform:none}88%{opacity:.9;transform:translate(8px,2px)}90%{opacity:.9;transform:translate(-6px,0)}92%{opacity:.9;transform:translate(5px,-2px)}94%{opacity:0;transform:none}}
+@keyframes slice{0%,100%{transform:none}89%{transform:translate(14px,0)}91%{transform:translate(-10px,0)}93%{transform:none}}
+@keyframes blink{50%{fill-opacity:0}}
+@keyframes beam{from{transform:translateY(-60px)}to{transform:translateY(320px)}}
+@media (prefers-reduced-motion:reduce){.flicker,.glitch-a,.glitch-b,.slice,.blink,.beam{animation:none}}
+</style>
+<defs>
+<svg id="mark" xmlns="http://www.w3.org/2000/svg" width="420" height="218" viewBox="0 0 300 156" role="img" aria-label="WR - Monogram negatywowy"><defs><linearGradient id="signal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#42E7D3"/><stop offset=".55" stop-color="#20C9B0"/><stop offset="1" stop-color="#00B9BA"/></linearGradient></defs><g transform="translate(16,16) scale(1.0)"><path d="M0 0 L20 0 C27 0 31 4 35 10 L73 73 C76 79 78 79 78 71 L78 5 C78 1 82 4 87 8 L136 88 L157 56 L188 56 L146 118 C139 126 130 126 123 117 L100 81 L79 117 C76 124 73 124 69 124 C63 124 59 123 55 117 Z" fill="#FFFFFF"/><path d="M112 0 L220 0 C249 0 267 13 267 39 C267 60 255 74 235 79 L263 124 L226 124 L190 76 L202 56 L218 56 C229 56 235 51 235 42 C235 33 229 29 218 29 L162 29 C152 29 147 34 140 45 Z" fill="url(#signal)"/></g></svg>
+<clipPath id="card"><rect width="1200" height="300" rx="16"/></clipPath>
+<clipPath id="band1"><rect x="0" y="40" width="440" height="34"/></clipPath>
+<clipPath id="band2"><rect x="0" y="150" width="440" height="22"/></clipPath>
+<clipPath id="t1"><rect x="596" y="92" width="229" height="32"><animate attributeName="width" values="0;13;27;40;54;67;81;94;108;121;135;148;162;175;189;202;216;229" begin="0.4s" dur="0.9s" calcMode="discrete" fill="freeze"/></rect></clipPath><clipPath id="t2"><rect x="596" y="124" width="422" height="84"><animate attributeName="width" values="0;47;94;141;188;234;281;328;375;422" begin="1.5s" dur="0.8s" calcMode="discrete" fill="freeze"/></rect></clipPath><clipPath id="t3"><rect x="596" y="218" width="242" height="32"><animate attributeName="width" values="0;13;27;40;54;67;81;94;108;121;134;148;161;175;188;202;215;229;242" begin="2.5s" dur="0.7s" calcMode="discrete" fill="freeze"/></rect></clipPath>
+<filter id="tint-signal"><feFlood flood-color="#20C9B0"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+<filter id="tint-blue"><feFlood flood-color="#3267E9"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000000" opacity=".28"/></pattern>
+<linearGradient id="floor-fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".9"/></linearGradient>
+<mask id="floor"><rect width="1200" height="300" fill="url(#floor-fade)"/></mask>
+<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20C9B0" stop-opacity="0"/><stop offset=".5" stop-color="#20C9B0" stop-opacity=".09"/><stop offset="1" stop-color="#20C9B0" stop-opacity="0"/></linearGradient>
+<linearGradient id="shine" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity=".75"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+</defs>
+<g clip-path="url(#card)">
+<rect width="1200" height="300" fill="#121B2B"/>
+<g stroke="#20C9B0" stroke-width="1" mask="url(#floor)" opacity=".5"><line x1="900" y1="150" x2="-600" y2="300"/><line x1="900" y1="150" x2="-450" y2="300"/><line x1="900" y1="150" x2="-300" y2="300"/><line x1="900" y1="150" x2="-150" y2="300"/><line x1="900" y1="150" x2="0" y2="300"/><line x1="900" y1="150" x2="150" y2="300"/><line x1="900" y1="150" x2="300" y2="300"/><line x1="900" y1="150" x2="450" y2="300"/><line x1="900" y1="150" x2="600" y2="300"/><line x1="900" y1="150" x2="750" y2="300"/><line x1="900" y1="150" x2="900" y2="300"/><line x1="900" y1="150" x2="1050" y2="300"/><line x1="900" y1="150" x2="1200" y2="300"/><line x1="900" y1="150" x2="1350" y2="300"/><line x1="900" y1="150" x2="1500" y2="300"/><line x1="900" y1="150" x2="1650" y2="300"/><line x1="900" y1="150" x2="1800" y2="300"/><line x1="900" y1="150" x2="1950" y2="300"/><line x1="900" y1="150" x2="2100" y2="300"/><line x1="900" y1="150" x2="2250" y2="300"/><line x1="900" y1="150" x2="2400" y2="300"/><g><line x1="0" y1="168" x2="1200" y2="168"/><line x1="0" y1="186" x2="1200" y2="186"/><line x1="0" y1="210" x2="1200" y2="210"/><line x1="0" y1="240" x2="1200" y2="240"/><line x1="0" y1="276" x2="1200" y2="276"/><animateTransform attributeName="transform" type="translate" values="0 0;0 18" dur="1.6s" repeatCount="indefinite"/></g></g>
+<g class="flicker">
+<g transform="translate(60 41)">
+<g class="glitch-a"><use href="#mark" xlink:href="#mark" filter="url(#tint-signal)"/></g>
+<g class="glitch-b"><use href="#mark" xlink:href="#mark" filter="url(#tint-blue)"/></g>
+<use href="#mark" xlink:href="#mark"/>
+<g class="slice" clip-path="url(#band1)"><rect y="40" width="440" height="34" fill="#121B2B"/><use href="#mark" xlink:href="#mark"/></g>
+<g class="slice" clip-path="url(#band2)"><rect y="150" width="440" height="22" fill="#121B2B"/><use href="#mark" xlink:href="#mark"/></g>
+</g>
+<rect x="564" y="96" width="3" height="150" fill="#526077"/>
+<text x="600" y="112" clip-path="url(#t1)" font-family="'JetBrains Mono', Consolas, 'Courier New', monospace" font-size="20" fill="#D9DEE6">wr@root:~$ whoami</text>
+<g class="glitch-a"><text x="600" y="196" font-family="'JetBrains Mono', Consolas, 'Courier New', monospace" font-size="72" font-weight="700" clip-path="url(#t2)" fill="#20C9B0">vviktooor</text></g>
+<g class="glitch-b"><text x="600" y="196" font-family="'JetBrains Mono', Consolas, 'Courier New', monospace" font-size="72" font-weight="700" clip-path="url(#t2)" fill="#3267E9">vviktooor</text></g>
+<text x="600" y="196" clip-path="url(#t2)" font-family="'JetBrains Mono', Consolas, 'Courier New', monospace" font-size="72" font-weight="700" fill="#FFFFFF">vviktooor</text>
+<text x="600" y="238" clip-path="url(#t3)" font-family="'JetBrains Mono', Consolas, 'Courier New', monospace" font-size="20" fill="#20C9B0">> access granted<tspan class="blink"> █</tspan></text>
+</g>
+<rect class="beam" width="1200" height="60" fill="url(#beam)"/>
+<rect width="1200" height="300" fill="url(#scan)"/>
+<rect x="0" y="292" width="1200" height="8" fill="#20C9B0"/>
+<rect x="-240" y="292" width="240" height="8" fill="url(#shine)"><animateTransform attributeName="transform" type="translate" from="0 0" to="1440 0" begin="1s" dur="3.2s" repeatCount="indefinite"/></rect>
+</g>
+<rect x="0.5" y="0.5" width="1199" height="299" rx="16" fill="none" stroke="#526077"/>
+</svg>
