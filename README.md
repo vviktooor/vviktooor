@@ -22,7 +22,3 @@
     <img src="https://raw.githubusercontent.com/vviktooor/vviktooor/output/snake-light.svg" width="100%" alt="Snake eating the contribution graph">
   </picture>
 </p>
-
-<p align="center">
-  <img src="https://visitor-badge.laobi.icu/badge?page_id=vviktooor.vviktooor&left_color=%23121B2B&right_color=%23526077&left_text=views" alt="Profile views">
-</p>
