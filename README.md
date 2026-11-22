@@ -1,9 +1,4 @@
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/wr-banner-dark.svg">
-    <img src="assets/wr-banner-light.svg" width="100%" alt="WR · vviktooor">
-  </picture>
-</div>
+<img src="assets/wr-banner.svg" width="100%" alt="WR · vviktooor">
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vviktooor/vviktooor/output/activity-dark.svg">
@@ -20,10 +15,6 @@
   <img src="https://raw.githubusercontent.com/vviktooor/vviktooor/output/snake-light.svg" width="100%" alt="Snake eating the contribution graph">
 </picture>
 
----
-
-<p align="center">
-  <img src="assets/wr-app-icon.svg" height="28" alt="WR"><br>
-  <sub>by WR · Digital · Software · Engineering</sub><br><br>
+<p align="right">
   <img src="https://visitor-badge.laobi.icu/badge?page_id=vviktooor.vviktooor&left_color=%23121B2B&right_color=%23526077&left_text=views" alt="Profile views">
 </p>
