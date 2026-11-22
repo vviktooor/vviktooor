@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/wr-banner-dark.svg">
-    <img src="assets/wr-banner-light.svg" width="100%" alt="Wiktor · WR – Digital · Software · Engineering">
+    <img src="assets/wr-banner-light.svg" width="100%" alt="WR · vviktooor">
   </picture>
 </div>
 
