@@ -27,6 +27,7 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ secrets.STATS_TOKEN || secrets.GITHUB_TOKEN }}
+      TOKEN_SOURCE: ${{ secrets.STATS_TOKEN != '' && 'STATS_TOKEN' || 'GITHUB_TOKEN (brak STATS_TOKEN)' }}
     steps:
       - uses: actions/checkout@v5
 

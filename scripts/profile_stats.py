@@ -89,6 +89,7 @@ def fetch(token: str, login: str, today: dt.date) -> dict:
         cursor = repos["pageInfo"]["endCursor"]
 
     # Diagnostyka: bez STATS_TOKEN prywatnych repo będzie 0.
+    print(f"Token: {os.environ.get('TOKEN_SOURCE', '?')}", file=sys.stderr)
     print(f"Repozytoria: {counted['public']} publicznych, {counted['private']} prywatnych", file=sys.stderr)
     return {"days": sorted(days.items()), "languages": languages, "since": start_year}
 
