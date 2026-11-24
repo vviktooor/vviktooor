@@ -216,9 +216,10 @@ def card(width: int, height: int, theme: dict, label: str, body: str, aria: str)
     steps = ";".join(str(round(text_w * i / full)) for i in range(full + 1))
     scan = ""
     if theme.get("scan"):
-        scan = (f'<pattern id="wr-scan" width="4" height="4" patternUnits="userSpaceOnUse">'
-                f'<rect width="4" height="2" fill="#000000" opacity=".22"/></pattern>'
-                f'<rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="15" fill="url(#wr-scan)" '
+        # linie CRT jako zwykła ścieżka, bez <pattern>: część przeglądarek obrazów
+        # (np. aplikacja GitHub na telefonie) nie obsługuje wzorców i maluje wtedy czarny prostokąt
+        lines = "".join(f"M1 {y}h{width - 2}" for y in range(3, height - 1, 4))
+        scan = (f'<path d="{lines}" stroke="#000000" stroke-width="2" stroke-opacity=".22" '
                 f'pointer-events="none"/>')
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
             f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(aria)}">{CSS}'
