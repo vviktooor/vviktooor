@@ -53,8 +53,11 @@ def typed(x: int, y: int, text: str, size: int, char_w: float, begin: float, dur
     """Tekst „pisany” znak po znaku: (clipPath do <defs>, element tekstu)."""
     width = round(len(text) * char_w) + 8
     steps = ";".join(str(round(width * i / len(text))) for i in range(len(text) + 1))
+    # stan bazowy = pełna szerokość (widoczny tekst bez animacji); do chwili `begin` szerokość 0
+    total = begin + dur
+    times = ";".join(f"{(begin + dur * i / len(text)) / total:.4f}" for i in range(len(text) + 1))
     clip = (f'<clipPath id="{cid}"><rect x="{x - 4}" y="{y - size}" width="{width}" height="{size + 12}">'
-            f'<animate attributeName="width" values="{steps}" begin="{begin}s" dur="{dur}s" '
+            f'<animate attributeName="width" values="0;{steps}" keyTimes="0;{times}" dur="{total}s" '
             f'calcMode="discrete" fill="freeze"/></rect></clipPath>')
     body = text.replace(" █", '<tspan class="blink"> █</tspan>')
     return clip, (f'<text x="{x}" y="{y}" clip-path="url(#{cid})" font-family="{MONO}" '
@@ -69,6 +72,12 @@ def grid() -> str:
     return (f'<g stroke="{SIGNAL}" stroke-width="1" mask="url(#floor)" opacity=".5">{"".join(lines)}'
             f'<g>{rows}<animateTransform attributeName="transform" type="translate" values="0 0;0 18" '
             f'dur="1.6s" repeatCount="indefinite"/></g></g>')
+
+
+def scanlines() -> str:
+    """Linie CRT jako zwykła ścieżka: <pattern> w części przeglądarek obrazów maluje czarny prostokąt."""
+    d = "".join(f"M0 {y}h{W}" for y in range(1, H, 4))
+    return f'<path d="{d}" stroke="#000000" stroke-width="2" stroke-opacity=".28"/>'
 
 
 def banner(logos: str) -> str:
@@ -87,7 +96,6 @@ def banner(logos: str) -> str:
 {c1}{c2}{c3}
 <filter id="tint-signal"><feFlood flood-color="{SIGNAL}"/><feComposite in2="SourceAlpha" operator="in"/></filter>
 <filter id="tint-blue"><feFlood flood-color="{BLUE}"/><feComposite in2="SourceAlpha" operator="in"/></filter>
-<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000000" opacity=".28"/></pattern>
 <linearGradient id="floor-fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" stop-color="{WHITE}" stop-opacity="0"/><stop offset="1" stop-color="{WHITE}" stop-opacity=".9"/></linearGradient>
 <mask id="floor"><rect width="{W}" height="{H}" fill="url(#floor-fade)"/></mask>
 <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{SIGNAL}" stop-opacity="0"/><stop offset=".5" stop-color="{SIGNAL}" stop-opacity=".09"/><stop offset="1" stop-color="{SIGNAL}" stop-opacity="0"/></linearGradient>
@@ -98,21 +106,21 @@ def banner(logos: str) -> str:
 {grid()}
 <g class="flicker">
 <g transform="translate(60 41)">
-<g class="glitch-a"><use href="#mark" xlink:href="#mark" filter="url(#tint-signal)"/></g>
-<g class="glitch-b"><use href="#mark" xlink:href="#mark" filter="url(#tint-blue)"/></g>
+<g class="glitch-a" opacity="0"><use href="#mark" xlink:href="#mark" filter="url(#tint-signal)"/></g>
+<g class="glitch-b" opacity="0"><use href="#mark" xlink:href="#mark" filter="url(#tint-blue)"/></g>
 <use href="#mark" xlink:href="#mark"/>
 <g class="slice" clip-path="url(#band1)"><rect y="40" width="440" height="34" fill="{INK}"/><use href="#mark" xlink:href="#mark"/></g>
 <g class="slice" clip-path="url(#band2)"><rect y="150" width="440" height="22" fill="{INK}"/><use href="#mark" xlink:href="#mark"/></g>
 </g>
 <rect x="{X0 - 36}" y="96" width="3" height="150" fill="{SLATE}"/>
 {t1}
-<g class="glitch-a">{handle_copy} fill="{SIGNAL}">{HANDLE}</text></g>
-<g class="glitch-b">{handle_copy} fill="{BLUE}">{HANDLE}</text></g>
+<g class="glitch-a" opacity="0">{handle_copy} fill="{SIGNAL}">{HANDLE}</text></g>
+<g class="glitch-b" opacity="0">{handle_copy} fill="{BLUE}">{HANDLE}</text></g>
 {t2}
 {t3}
 </g>
 <rect class="beam" width="{W}" height="60" fill="url(#beam)"/>
-<rect width="{W}" height="{H}" fill="url(#scan)"/>
+{scanlines()}
 <rect x="0" y="292" width="{W}" height="8" fill="{SIGNAL}"/>
 <rect x="-240" y="292" width="240" height="8" fill="url(#shine)"><animateTransform attributeName="transform" type="translate" from="0 0" to="{W + 240} 0" begin="1s" dur="3.2s" repeatCount="indefinite"/></rect>
 </g>
